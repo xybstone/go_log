@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	golog "log"
 	"os"
 	"reflect"
 	"strings"
@@ -9,8 +10,11 @@ import (
 )
 
 const (
-	PREFIX      = "[ST Web Service]"
+	//PREFIX 前缀
+	PREFIX = "[ST Web Service]"
+	//TIME_FORMAT 日期格式
 	TIME_FORMAT = "2006-01-02 15:04:05"
+	//DATE_FORMAT 日期格式
 	DATE_FORMAT = "2006-01-02"
 )
 
@@ -35,14 +39,13 @@ func exist(filename string) bool {
 func saveLog(format string) {
 	path := time.Now().Format(DATE_FORMAT) + ".txt"
 	var f *os.File
-	if exist(path) {
-		f, _ = os.OpenFile(path, os.O_RDWR, os.ModeAppend)
-	} else {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+	if os.IsExist(err) {
 		f, _ = os.Create(path)
 	}
-
-	defer f.Close()
-	f.WriteString(format)
+	golog.SetOutput(f)
+	//golog.SetFlags(golog.Ldate | golog.Ltime | golog.Lshortfile)
+	golog.Output(0, format)
 }
 
 func printf(format string, args ...interface{}) string {
@@ -69,15 +72,17 @@ func printf(format string, args ...interface{}) string {
 	return strings.Join(res, "\n")
 }
 
+//Print 打印对象，对象属性会被依次打印
 func Print(level int, format string, args ...interface{}) {
-	info := fmt.Sprintf("%s %s %s %s\n",
-		PREFIX, time.Now().Format(TIME_FORMAT), LEVEL_FLAGS[level],
+	info := fmt.Sprintf("%s %s %s\n",
+		PREFIX, LEVEL_FLAGS[level],
 		printf(format, args...))
 	switch level {
 	case DEBUG:
 		fmt.Println(info)
 	case INFO:
 		fmt.Println(info)
+		saveLog(info)
 	case WARNING:
 		fmt.Println(info)
 	case ERROR:
@@ -90,18 +95,27 @@ func Print(level int, format string, args ...interface{}) {
 	}
 }
 
+//Debug 调试
 func Debug(format string, args ...interface{}) {
 	Print(DEBUG, format, args...)
 }
+
+//Warn 警告
 func Warn(format string, args ...interface{}) {
 	Print(WARNING, format, args...)
 }
+
+//Info 信息，持久化
 func Info(format string, args ...interface{}) {
 	Print(INFO, format, args...)
 }
+
+//Error 醋味
 func Error(format string, args ...interface{}) {
 	Print(ERROR, format, args...)
 }
+
+//Fatal 异常
 func Fatal(format string, args ...interface{}) {
 	Print(FATAL, format, args...)
 }
