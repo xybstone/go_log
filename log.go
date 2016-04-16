@@ -11,7 +11,7 @@ import (
 
 const (
 	//PREFIX 前缀
-	PREFIX = "[ST Web Service]"
+	PREFIX = "[ST LOG]"
 	//TIME_FORMAT 日期格式
 	TIME_FORMAT = "2006-01-02 15:04:05"
 	//DATE_FORMAT 日期格式
@@ -21,6 +21,7 @@ const (
 var (
 	LEVEL_FLAGS = [...]string{"DEBUG", " INFO", " WARN", "ERROR", "FATAL"}
 	PATH        = ""
+	IsDebug     = false
 )
 
 const (
@@ -37,7 +38,7 @@ func exist(filename string) bool {
 }
 
 func saveLog(format string) {
-	path := time.Now().Format(DATE_FORMAT) + ".txt"
+	path := "logs/" + time.Now().Format(DATE_FORMAT) + ".txt"
 	var f *os.File
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 	if os.IsExist(err) {
@@ -53,8 +54,10 @@ func printf(format string, args ...interface{}) string {
 	for _, arg := range args {
 		t := reflect.TypeOf(arg)
 		v := reflect.ValueOf(arg)
-		var obj []string
-		if t.Kind() == reflect.Struct {
+		if t.Kind() == reflect.String {
+			res = append(res, fmt.Sprintf("%s", arg))
+		} else if t.Kind() == reflect.Struct {
+			var obj []string
 			obj = append(obj, fmt.Sprintf("Object Name:%s", t.Name()))
 			for i := 0; i < t.NumField(); i++ {
 				f := t.Field(i)
@@ -69,7 +72,7 @@ func printf(format string, args ...interface{}) string {
 			res = append(res, fmt.Sprintf("%v", arg))
 		}
 	}
-	return strings.Join(res, "\n")
+	return fmt.Sprintln(format, strings.Join(res, "\n"))
 }
 
 //Print 打印对象，对象属性会被依次打印
@@ -97,7 +100,9 @@ func Print(level int, format string, args ...interface{}) {
 
 //Debug 调试
 func Debug(format string, args ...interface{}) {
-	Print(DEBUG, format, args...)
+	if IsDebug {
+		Print(DEBUG, format, args...)
+	}
 }
 
 //Warn 警告
