@@ -38,11 +38,13 @@ func exist(filename string) bool {
 }
 
 func saveLog(format string) {
+
 	path := "logs/" + time.Now().Format(DATE_FORMAT) + ".txt"
 	var f *os.File
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-	if os.IsExist(err) {
+	if !exist(path) {
 		f, _ = os.Create(path)
+	} else {
+		f, _ = os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 	}
 	golog.SetOutput(f)
 	//golog.SetFlags(golog.Ldate | golog.Ltime | golog.Lshortfile)
@@ -73,6 +75,11 @@ func printf(format string, args ...interface{}) string {
 		}
 	}
 	return fmt.Sprintln(format, strings.Join(res, "\n"))
+}
+
+//Println 打印输出
+func Println(a ...interface{}) {
+	saveLog(fmt.Sprintf("%s %s %s\n", PREFIX, LEVEL_FLAGS[INFO], fmt.Sprintln(a)))
 }
 
 //Print 打印对象，对象属性会被依次打印
