@@ -32,6 +32,12 @@ const (
 	FATAL
 )
 
+func init() {
+	if !exist("logs") {
+		os.Mkdir("logs", os.ModePerm)
+	}
+}
+
 func exist(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil || os.IsExist(err)
